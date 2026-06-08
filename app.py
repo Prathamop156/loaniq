@@ -63,7 +63,7 @@ with engine.connect() as conn:
 # LOAD MODEL
 # ----------------------------------------
 
-model = joblib.load("model (1).pkl")
+model = joblib.load("model.pkl")
 
 
 # ----------------------------------------
