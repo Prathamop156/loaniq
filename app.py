@@ -19,16 +19,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-connection_url = URL.create(
-    drivername="postgresql+psycopg2",
-    username="postgres",
-    password="Glorymanutd@7",
-    host="localhost",
-    port=5432,
-    database="loaniq_db"
-)
+import os
+from urllib.parse import quote_plus
 
-engine = create_engine(connection_url)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    # Running on Render
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+else:
+    # Running locally
+    password = quote_plus("Glorymanutd@7")
+    DATABASE_URL = f"postgresql+psycopg2://postgres:{password}@localhost:5432/loaniq_db"
+
+engine = create_engine(DATABASE_URL)
 
 # Create table if not exists
 with engine.connect() as conn:
