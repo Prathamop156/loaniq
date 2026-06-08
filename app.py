@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
 import joblib
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
+from datetime import datetime
 
 
 # ----------------------------------------
@@ -16,6 +19,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+connection_url = URL.create(
+    drivername="postgresql+psycopg2",
+    username="postgres",
+    password="Glorymanutd@7",
+    host="localhost",
+    port=5432,
+    database="loaniq_db"
+)
+
+engine = create_engine(connection_url)
+
+# Create table if not exists
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS loan_predictions (
+            id SERIAL PRIMARY KEY,
+            no_of_dependents INTEGER,
+            education VARCHAR(20),
+            self_employed VARCHAR(5),
+            income_annum INTEGER,
+            loan_amount INTEGER,
+            loan_term INTEGER,
+            cibil_score INTEGER,
+            residential_assets_value INTEGER,
+            commercial_assets_value INTEGER,
+            luxury_assets_value INTEGER,
+            bank_asset_value INTEGER,
+            prediction VARCHAR(20),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    conn.commit()
+
 
 
 # ----------------------------------------
@@ -80,6 +116,44 @@ def predict(data: LoanData):
 
 
     prediction = model.predict(input_data)[0]
+# ----------------------------------------
+# HISTORY ROUTE
+# ----------------------------------------
+
+@app.get("/history")
+def history():
+    with engine.connect() as conn:
+        df = pd.read_sql("""
+            SELECT * FROM loan_predictions 
+            ORDER BY created_at DESC
+        """, conn)
+        return df.to_dict(orient="records")    
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO loan_predictions 
+            (no_of_dependents, education, self_employed, income_annum, 
+            loan_amount, loan_term, cibil_score, residential_assets_value,
+            commercial_assets_value, luxury_assets_value, bank_asset_value, prediction)
+            VALUES 
+            (:no_of_dependents, :education, :self_employed, :income_annum,
+            :loan_amount, :loan_term, :cibil_score, :residential_assets_value,
+            :commercial_assets_value, :luxury_assets_value, :bank_asset_value, :prediction)
+        """), {
+            "no_of_dependents": data.no_of_dependents,
+            "education": data.education,
+            "self_employed": data.self_employed,
+            "income_annum": data.income_annum,
+            "loan_amount": data.loan_amount,
+            "loan_term": data.loan_term,
+            "cibil_score": data.cibil_score,
+            "residential_assets_value": data.residential_assets_value,
+            "commercial_assets_value": data.commercial_assets_value,
+            "luxury_assets_value": data.luxury_assets_value,
+            "bank_asset_value": data.bank_asset_value,
+            "prediction": str(prediction)
+        })
+        conn.commit()
+
 
 
     return {

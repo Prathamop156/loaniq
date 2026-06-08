@@ -91,7 +91,7 @@ export default function App() {
     e.preventDefault();
     setPredLoading(true); setPredResult(null); setPredError("");
     try {
-      const res = await fetch("https://loaniq-5uhh.onrender.com/predict", {
+      const res = await fetch("http://localhost:8000/predict", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, no_of_dependents: parseInt(form.no_of_dependents), income_annum: parseInt(form.income_annum), loan_amount: parseInt(form.loan_amount), loan_term: parseInt(form.loan_term), cibil_score: parseInt(form.cibil_score), residential_assets_value: parseInt(form.residential_assets_value), commercial_assets_value: parseInt(form.commercial_assets_value), luxury_assets_value: parseInt(form.luxury_assets_value), bank_asset_value: parseInt(form.bank_asset_value) }),
       });
