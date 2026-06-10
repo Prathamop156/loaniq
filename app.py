@@ -121,6 +121,10 @@ def predict(data: LoanData):
 
 
     prediction = model.predict(input_data)[0]
+    print("Prediction value:", prediction)
+    print("Prediction type:", type(prediction))
+
+    return {"loan_prediction": str(prediction)}
 # ----------------------------------------
 # HISTORY ROUTE
 # ----------------------------------------
